@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Login - AtithiVerse{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-10 col-xl-8">
+                <div class="auth-card" data-aos="fade-up">
+                    <div class="row g-0">
+                        <!-- Left Side - Image/Branding -->
+                        <div class="col-lg-6 auth-visual">
+                            <div class="auth-visual-content">
+                                <div class="visual-overlay"></div>
+                                <div class="visual-content">
+                                    <h2>Welcome Back!</h2>
+                                    <p>Continue your incredible journey through India's most amazing destinations.</p>
+                                    
+                                    <div class="auth-features">
+                                        <div class="auth-feature">
+                                            <i class="fas fa-plane"></i>
+                                            <span>Book Amazing Destinations</span>
+                                        </div>
+                                        <div class="auth-feature">
+                                            <i class="fas fa-heart"></i>
+                                            <span>Save Your Favorite Places</span>
+                                        </div>
+                                        <div class="auth-feature">
+                                            <i class="fas fa-star"></i>
+                                            <span>Get Exclusive Offers</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Side - Login Form -->
+                        <div class="col-lg-6 auth-form-section">
+                            <div class="auth-form-content">
+                                <div class="auth-header">
+                                    <h3>Sign In</h3>
+                                    <p>Enter your credentials to access your account</p>
+                                </div>
+                                
+                                <form id="loginForm" class="auth-form">
+                                    <div class="form-group">
+                                        <label for="email">Email Address</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-envelope"></i>
+                                            <input type="email" id="email" name="email" class="form-control" 
+                                                   placeholder="Enter your email" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="password">Password</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-lock"></i>
+                                            <input type="password" id="password" name="password" class="form-control" 
+                                                   placeholder="Enter your password" required>
+                                            <button type="button" class="password-toggle" id="togglePassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-options">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                            <label class="form-check-label" for="remember">
+                                                Remember me
+                                            </label>
+                                        </div>
+                                        <a href="#" class="forgot-password">Forgot password?</a>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 auth-submit">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Sign In
+                                    </button>
+                                </form>
+                                
+                                <div class="auth-divider">
+                                    <span>Or continue with</span>
+                                </div>
+                                
+                                <div class="social-login">
+                                    <button class="btn btn-outline-primary social-btn" onclick="socialLogin('google')">
+                                        <i class="fab fa-google"></i>
+                                        Google
+                                    </button>
+                                    <button class="btn btn-outline-primary social-btn" onclick="socialLogin('facebook')">
+                                        <i class="fab fa-facebook-f"></i>
+                                        Facebook
+                                    </button>
+                                </div>
+                                
+                                <div class="auth-switch">
+                                    <p>Don't have an account? <a href="{{ url_for('register_page') }}" class="text-primary">Sign up here</a></p>
+                                </div>
+                                
+                                <div class="demo-credentials">
+                                    <small class="text-muted">
+                                        <strong>Demo Login:</strong><br>
+                                        Email: demo@atithiverse.com<br>
+                                        Password: demo123
+                                    </small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2 w-100" onclick="fillDemoCredentials()">
+                                        <i class="fas fa-user me-1"></i>Use Demo Login
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page initialized');
+    
+    // Password toggle functionality
+    const passwordToggle = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('password');
+    
+    if (passwordToggle && passwordField) {
+        passwordToggle.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    // Login form submission
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleLogin();
+        });
+    }
+    
+    // Auto-fill demo credentials if URL has demo parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') {
+        fillDemoCredentials();
+    }
+});
+
+function handleLogin() {
+    const submitBtn = document.querySelector('.auth-submit');
+    const originalText = submitBtn.innerHTML;
+    const formData = new FormData(document.getElementById('loginForm'));
+    
+    // Validate form
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    if (!email || !password) {
+        showNotification('Please fill in all required fields.', 'error');
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        showNotification('Please enter a valid email address.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing in...';
+    submitBtn.disabled = true;
+    
+    const data = {
+        email: email,
+        password: password,
+        remember: formData.get('remember') ? true : false
+    };
+    
+    console.log('Attempting login for:', email);
+    
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        console.log('Login response status:', response.status);
+        return response.json();
+    })
+    .then(result => {
+        console.log('Login result:', result);
+        
+        if (result.success) {
+            // Store user info in localStorage for client-side access
+            if (result.user) {
+                localStorage.setItem('user', JSON.stringify(result.user));
+            }
+            
+            showNotification(result.message || 'Welcome back! Redirecting...', 'success');
+            
+            // Redirect after short delay
+            setTimeout(() => {
+                const redirectTo = getUrlParameter('redirect') || '/';
+                window.location.href = redirectTo;
+            }, 1500);
+            
+        } else {
+            showNotification(result.message || 'Login failed. Please try again.', 'error');
+            
+            // If demo credentials failed, suggest account creation
+            if (email === 'demo@atithiverse.com') {
+                setTimeout(() => {
+                    showNotification('Demo account not found. Try creating a new account!', 'info');
+                }, 2000);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Login error:', error);
+        showNotification('Connection error. Please check your internet and try again.', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function fillDemoCredentials() {
+    const emailField = document.getElementById('email');
+    const passwordField = document.getElementById('password');
+    
+    if (emailField && passwordField) {
+        emailField.value = 'demo@atithiverse.com';
+        passwordField.value = 'demo123';
+        
+        // Add visual feedback
+        emailField.classList.add('is-valid');
+        passwordField.classList.add('is-valid');
+        
+        showNotification('Demo credentials filled! Click Sign In to continue.', 'info');
+    }
+}
+
+function socialLogin(provider) {
+    showNotification(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon!`, 'info');
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.custom-notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `custom-notification alert alert-${getAlertClass(type)} alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 10000;
+        min-width: 320px;
+        max-width: 400px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        border: none;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${getNotificationIcon(type)} me-3" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+                <strong>${getNotificationTitle(type)}</strong><br>
+                <span style="font-size: 0.9rem;">${message}</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after duration based on type
+    const duration = type === 'error' ? 8000 : type === 'success' ? 4000 : 6000;
+    setTimeout(() => {
+        if (notification && notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, duration);
+    
+    // Add click to dismiss
+    notification.addEventListener('click', function() {
+        this.classList.remove('show');
+        setTimeout(() => this.remove(), 300);
+    });
+}
+
+function getAlertClass(type) {
+    const classes = {
+        'success': 'success',
+        'error': 'danger', 
+        'warning': 'warning',
+        'info': 'info'
+    };
+    return classes[type] || 'info';
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'success': 'check-circle',
+        'error': 'exclamation-triangle',
+        'warning': 'exclamation-circle', 
+        'info': 'info-circle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function getNotificationTitle(type) {
+    const titles = {
+        'success': 'Success!',
+        'error': 'Error',
+        'warning': 'Warning',
+        'info': 'Info'
+    };
+    return titles[type] || 'Notification';
+}
+
+// Handle keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Enter key on form fields
+    if (e.key === 'Enter' && (e.target.type === 'email' || e.target.type === 'password')) {
+        e.preventDefault();
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+    }
+    
+    // Ctrl+D to fill demo credentials
+    if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        fillDemoCredentials();
+    }
+});
+
+// Add form validation feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

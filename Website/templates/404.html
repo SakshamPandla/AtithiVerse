@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - AtithiVerse{% endblock %}
+
+{% block content %}
+<section class="error-section">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-6 text-center">
+                <div class="error-content" data-aos="fade-up">
+                    <div class="error-illustration">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h1 class="error-title">404</h1>
+                    <h2 class="error-subtitle">Looks like you're lost!</h2>
+                    <p class="error-description">
+                        The page you're looking for doesn't exist or has been moved. 
+                        Let's get you back on track to discover incredible India.
+                    </p>
+                    
+                    <div class="error-actions">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                        <a href="{{ url_for('contact') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-envelope me-2"></i>Contact Support
+                        </a>
+                    </div>
+                    
+                    <div class="error-suggestions mt-5">
+                        <h5>Popular Destinations</h5>
+                        <div class="suggestion-links">
+                            <a href="#" class="suggestion-link">Taj Mahal</a>
+                            <a href="#" class="suggestion-link">Goa Beaches</a>
+                            <a href="#" class="suggestion-link">Kerala Backwaters</a>
+                            <a href="#" class="suggestion-link">Jaipur Palace</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

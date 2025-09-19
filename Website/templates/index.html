@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" id="home">
+    <div class="hero-background">
+        <div class="hero-video">
+            <video autoplay muted loop>
+                <source src="https://player.vimeo.com/external/370467553.sd.mp4?s=96cfaa2c6522e2c8b8c8b8b8b8b8b8&profile_id=164&oauth2_token_id=57447761" type="video/mp4">
+            </video>
+        </div>
+        <div class="hero-overlay"></div>
+    </div>
+    
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+                    <h1 class="hero-title">
+                        Discover
+                        <span class="text-gradient">Incredible India</span>
+                    </h1>
+                    <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">
+                        Embark on extraordinary journeys through India's most breathtaking destinations. 
+                        From ancient monuments to pristine beaches, create memories that last a lifetime.
+                    </p>
+                    
+                    <div class="hero-search" data-aos="fade-up" data-aos-delay="400">
+                        <div class="search-form">
+                            <div class="search-input-group">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" placeholder="Where do you want to go?" id="searchDestination">
+                            </div>
+                            <div class="search-input-group">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" id="searchDate">
+                            </div>
+                            <div class="search-input-group">
+                                <i class="fas fa-users"></i>
+                                <select id="searchGuests">
+                                    <option>2 Guests</option>
+                                    <option>1 Guest</option>
+                                    <option>3 Guests</option>
+                                    <option>4+ Guests</option>
+                                </select>
+                            </div>
+                            <button class="search-btn" type="button">
+                                <i class="fas fa-search"></i>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-stats" data-aos="fade-up" data-aos-delay="600">
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Destinations</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Happy Travelers</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">4.9⭐</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="scroll-indicator">
+        <div class="scroll-mouse">
+            <div class="scroll-wheel"></div>
+        </div>
+        <p>Scroll to explore</p>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Secure Booking</h4>
+                    <p>100% secure payment system with instant confirmation</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h4>24/7 Support</h4>
+                    <p>Round-the-clock customer support for all your needs</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h4>Best Price Guarantee</h4>
+                    <p>We guarantee the best prices for your perfect trip</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h4>Local Experiences</h4>
+                    <p>Authentic local experiences curated by experts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Destinations Section -->
+<section class="destinations-section py-5" id="destinations">
+    <div class="container">
+        <div class="section-header text-center mb-5" data-aos="fade-up">
+            <h2 class="section-title">Popular Destinations</h2>
+            <p class="section-subtitle">
+                Discover the most sought-after places that showcase India's incredible diversity
+            </p>
+        </div>
+        
+        <!-- Category Filters -->
+        <div class="category-filters" data-aos="fade-up" data-aos-delay="100">
+            <button class="filter-btn active" data-category="all">All Destinations</button>
+            <button class="filter-btn" data-category="mustsees">Must-See Places</button>
+            <button class="filter-btn" data-category="cityviews">City Views</button>
+            <button class="filter-btn" data-category="tours">Adventure Tours</button>
+            <button class="filter-btn" data-category="hotels">Luxury Stays</button>
+        </div>
+        
+        <!-- Destinations Grid -->
+        <div class="destinations-grid" id="destinationsGrid">
+            <!-- Destinations will be loaded dynamically -->
+        </div>
+        
+        <div class="text-center mt-5" data-aos="fade-up">
+            <button class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-eye me-2"></i>View All Destinations
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Experiences Section -->
+<section class="experiences-section py-5" id="experiences">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6" data-aos="fade-right">
+                <div class="experience-content">
+                    <h2 class="section-title">Unforgettable Experiences</h2>
+                    <p class="section-description">
+                        From sunrise at the Taj Mahal to sunset cruises in Kerala's backwaters, 
+                        every moment in India tells a story. Let us craft your perfect journey.
+                    </p>
+                    
+                    <div class="experience-features">
+                        <div class="experience-feature">
+                            <i class="fas fa-camera"></i>
+                            <div>
+                                <h5>Photography Tours</h5>
+                                <p>Capture India's beauty with expert guides</p>
+                            </div>
+                        </div>
+                        <div class="experience-feature">
+                            <i class="fas fa-utensils"></i>
+                            <div>
+                                <h5>Culinary Adventures</h5>
+                                <p>Taste authentic flavors from every region</p>
+                            </div>
+                        </div>
+                        <div class="experience-feature">
+                            <i class="fas fa-om"></i>
+                            <div>
+                                <h5>Spiritual Journeys</h5>
+                                <p>Find peace in ancient temples and ashrams</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-lg mt-4">
+                        <i class="fas fa-play me-2"></i>Watch Our Story
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <div class="experience-gallery">
+                    <div class="gallery-main">
+                        <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=500" alt="India Experience" class="img-fluid rounded-4">
+                    </div>
+                    <div class="gallery-thumbnails">
+                        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200" alt="Mountains" class="img-fluid rounded-3">
+                        <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=200" alt="Beach" class="img-fluid rounded-3">
+                        <img src="https://images.unsplash.com/photo-1602726048818-3cca561d2c25?w=200" alt="Culture" class="img-fluid rounded-3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="newsletter-section py-5">
+    <div class="container">
+        <div class="newsletter-card" data-aos="fade-up">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h3>Get Travel Inspiration</h3>
+                    <p>Subscribe to our newsletter for exclusive deals, travel tips, and destination guides.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="newsletter-form">
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="Enter your email">
+                            <button class="btn btn-primary" type="button">
+                                <i class="fas fa-paper-plane me-2"></i>Subscribe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDestinations('all');
+    
+    // Category filter handlers
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.dataset.category;
+            
+            // Update active filter
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Load destinations
+            loadDestinations(category);
+        });
+    });
+});
+
+function loadDestinations(category = 'all') {
+    const url = category === 'all' ? '/api/destinations' : `/api/destinations?category=${category}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(destinations => {
+            displayDestinations(destinations);
+        })
+        .catch(error => {
+            console.error('Error loading destinations:', error);
+        });
+}
+
+function displayDestinations(destinations) {
+    const grid = document.getElementById('destinationsGrid');
+    
+    grid.innerHTML = destinations.map(dest => `
+        <div class="destination-card" data-aos="fade-up">
+            <div class="destination-image">
+                <img src="${dest.image}" alt="${dest.name}" class="img-fluid">
+                <div class="destination-overlay">
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </button>
+                </div>
+                <div class="destination-badge">
+                    <i class="fas fa-star"></i>
+                    ${dest.rating}
+                </div>
+            </div>
+            <div class="destination-content">
+                <div class="destination-location">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    ${dest.location}
+                </div>
+                <h4 class="destination-title">${dest.name}</h4>
+                <p class="destination-description">${dest.description}</p>
+                <div class="destination-features">
+                    ${dest.features.slice(0, 2).map(feature => `
+                        <span class="feature-tag">${feature}</span>
+                    `).join('')}
+                </div>
+                <div class="destination-footer">
+                    <div class="destination-price">
+                        <span class="price-label">From</span>
+                        <span class="price-value">₹${dest.price.toLocaleString()}</span>
+                        <span class="price-unit">per person</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-heart me-1"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Reinitialize AOS for new elements
+    AOS.refresh();
+}
+</script>
+{% endblock %}
