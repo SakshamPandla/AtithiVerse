@@ -1,0 +1,428 @@
+{
+  "destinations": [
+    {
+      "id": 1,
+      "name": "Taj Mahal",
+      "slug": "taj-mahal-agra",
+      "category": "heritage",
+      "location": {
+        "city": "Agra",
+        "state": "Uttar Pradesh",
+        "country": "India",
+        "coordinates": {
+          "lat": 27.1751,
+          "lng": 78.0421
+        }
+      },
+      "pricing": {
+        "indian_citizens": 500,
+        "foreign_nationals": 1100,
+        "children": 0,
+        "currency": "INR"
+      },
+      "timings": {
+        "opening": "06:00",
+        "closing": "18:30",
+        "closed_on": ["Friday"],
+        "best_time": "Sunrise (6:00 AM) and Sunset (5:30 PM)"
+      },
+      "description": {
+        "short": "UNESCO World Heritage site and symbol of eternal love",
+        "long": "The Taj Mahal is an ivory-white marble mausoleum on the right bank of the river Yamuna in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor Shah Jahan to house the tomb of his favourite wife, Mumtaz Mahal.",
+        "highlights": [
+          "Iconic white marble architecture",
+          "Symbol of eternal love",
+          "UNESCO World Heritage Site",
+          "Mughal architectural masterpiece"
+        ]
+      },
+      "travel_info": {
+        "best_season": "October to March",
+        "duration": "3-4 hours",
+        "difficulty_level": "Easy",
+        "photography": "Allowed (no tripods inside main mausoleum)"
+      },
+      "amenities": [
+        "Audio guides available",
+        "Wheelchair accessible",
+        "Souvenir shops",
+        "Restrooms",
+        "Parking facilities"
+      ],
+      "nearby_attractions": [
+        {
+          "name": "Agra Fort",
+          "distance": "2.5 km",
+          "travel_time": "10 minutes"
+        },
+        {
+          "name": "Mehtab Bagh",
+          "distance": "1.5 km", 
+          "travel_time": "5 minutes"
+        }
+      ],
+      "tips": [
+        "Visit at sunrise for golden lighting and fewer crowds",
+        "Book tickets online to avoid long queues",
+        "Carry valid ID proof",
+        "No food items allowed inside",
+        "Best photography during golden hour"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      ],
+      "rating": 4.9,
+      "reviews_count": 12450,
+      "tags": ["heritage", "unesco", "architecture", "romantic", "photography"]
+    },
+    {
+      "id": 2,
+      "name": "Goa Beach Paradise",
+      "slug": "goa-beaches",
+      "category": "beach",
+      "location": {
+        "city": "Panaji",
+        "state": "Goa",
+        "country": "India",
+        "coordinates": {
+          "lat": 15.2993,
+          "lng": 74.1240
+        }
+      },
+      "pricing": {
+        "daily_budget": {
+          "backpacker": "2000-3000",
+          "mid_range": "3000-6000",
+          "luxury": "8000-20000"
+        },
+        "currency": "INR"
+      },
+      "description": {
+        "short": "Pristine beaches with vibrant nightlife and water sports",
+        "long": "Goa is a state in western India with coastlines stretching along the Arabian Sea. Its long history as a Portuguese colony prior to 1961 is evident in its preserved 17th-century churches and the area's tropical spice plantations.",
+        "highlights": [
+          "Golden sandy beaches",
+          "Vibrant nightlife",
+          "Water sports paradise",
+          "Portuguese heritage",
+          "Seafood delicacies"
+        ]
+      },
+      "beaches": {
+        "north_goa": [
+          {
+            "name": "Baga Beach",
+            "type": "Party beach",
+            "activities": ["Water sports", "Nightlife", "Beach shacks"]
+          },
+          {
+            "name": "Calangute Beach", 
+            "type": "Commercial beach",
+            "activities": ["Swimming", "Shopping", "Restaurants"]
+          },
+          {
+            "name": "Anjuna Beach",
+            "type": "Hippie culture",
+            "activities": ["Flea markets", "Trance parties", "Cliff jumping"]
+          }
+        ],
+        "south_goa": [
+          {
+            "name": "Palolem Beach",
+            "type": "Peaceful crescent",
+            "activities": ["Kayaking", "Beach huts", "Sunset viewing"]
+          },
+          {
+            "name": "Agonda Beach",
+            "type": "Pristine and quiet",
+            "activities": ["Turtle nesting", "Yoga", "Photography"]
+          }
+        ]
+      },
+      "travel_info": {
+        "best_season": "November to March",
+        "duration": "3-7 days",
+        "difficulty_level": "Easy"
+      },
+      "tips": [
+        "North Goa for parties and nightlife",
+        "South Goa for peaceful beaches",
+        "Rent a scooter for easy mobility",
+        "Try fresh seafood and local feni",
+        "Book beach shacks in advance during peak season"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      ],
+      "rating": 4.7,
+      "reviews_count": 8320,
+      "tags": ["beach", "nightlife", "water-sports", "seafood", "relaxation"]
+    },
+    {
+      "id": 3,
+      "name": "Kerala Backwaters",
+      "slug": "kerala-backwaters",
+      "category": "nature",
+      "location": {
+        "city": "Alleppey",
+        "state": "Kerala",
+        "country": "India",
+        "coordinates": {
+          "lat": 9.4981,
+          "lng": 76.3388
+        }
+      },
+      "pricing": {
+        "houseboat_rates": {
+          "standard": "4000-6000",
+          "deluxe": "6000-10000",
+          "luxury": "10000-15000"
+        },
+        "currency": "INR",
+        "per": "night"
+      },
+      "description": {
+        "short": "Serene houseboat experience in God's Own Country",
+        "long": "The Kerala backwaters are a network of brackish lagoons and lakes lying parallel to the Arabian Sea coast of Kerala state in southern India. These interconnected waterways, along with their palm-fringed shores, provide one of the most enchanting and relaxing experiences in India.",
+        "highlights": [
+          "Traditional houseboat stays",
+          "Coconut palm landscapes", 
+          "Traditional Kerala cuisine",
+          "Ayurvedic treatments",
+          "Bird watching"
+        ]
+      },
+      "destinations": [
+        {
+          "name": "Alleppey",
+          "specialty": "Venice of the East",
+          "best_for": "Houseboat cruises"
+        },
+        {
+          "name": "Kumarakom",
+          "specialty": "Bird sanctuary",
+          "best_for": "Luxury resorts"
+        },
+        {
+          "name": "Kollam",
+          "specialty": "Budget-friendly",
+          "best_for": "Day cruises"
+        }
+      ],
+      "experiences": [
+        {
+          "name": "Traditional Houseboat Stay",
+          "duration": "1-2 nights",
+          "includes": ["Accommodation", "All meals", "Sightseeing"]
+        },
+        {
+          "name": "Ayurvedic Spa Treatment",
+          "duration": "2-4 hours",
+          "price_range": "1500-4000"
+        },
+        {
+          "name": "Village Walk",
+          "duration": "2-3 hours",
+          "highlights": ["Coir making", "Toddy tapping", "Local life"]
+        }
+      ],
+      "travel_info": {
+        "best_season": "September to March",
+        "duration": "2-4 days",
+        "difficulty_level": "Easy"
+      },
+      "tips": [
+        "Book houseboats in advance during peak season",
+        "Try authentic Kerala cuisine on board",
+        "Combine with hill stations like Munnar",
+        "Best time for photography is early morning",
+        "Carry mosquito repellent"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      ],
+      "rating": 4.9,
+      "reviews_count": 5670,
+      "tags": ["backwaters", "houseboat", "ayurveda", "nature", "peaceful"]
+    },
+    {
+      "id": 4,
+      "name": "Rajasthan Royal Circuit",
+      "slug": "rajasthan-palaces",
+      "category": "heritage",
+      "location": {
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "country": "India",
+        "coordinates": {
+          "lat": 26.9124,
+          "lng": 75.7873
+        }
+      },
+      "pricing": {
+        "palace_entries": "300-500",
+        "heritage_hotels": "8000-50000",
+        "currency": "INR"
+      },
+      "description": {
+        "short": "Magnificent royal palaces showcasing Rajput architecture",
+        "long": "Rajasthan, the 'Land of Kings', offers an incredible journey through India's royal heritage. From the pink-hued palaces of Jaipur to the lake palaces of Udaipur, this royal circuit showcases centuries of Rajput grandeur, desert landscapes, and cultural richness.",
+        "highlights": [
+          "Majestic palaces and forts",
+          "Desert safari experiences",
+          "Royal heritage hotels",
+          "Vibrant folk culture",
+          "Colorful bazaars"
+        ]
+      },
+      "cities": [
+        {
+          "name": "Jaipur",
+          "nickname": "Pink City",
+          "attractions": [
+            "City Palace",
+            "Amber Fort", 
+            "Hawa Mahal",
+            "Jantar Mantar"
+          ],
+          "specialties": ["Gemstones", "Textiles", "Handicrafts"]
+        },
+        {
+          "name": "Udaipur",
+          "nickname": "City of Lakes",
+          "attractions": [
+            "Lake Palace",
+            "City Palace",
+            "Lake Pichola",
+            "Jagdish Temple"
+          ],
+          "specialties": ["Miniature paintings", "Lake cruises"]
+        },
+        {
+          "name": "Jodhpur", 
+          "nickname": "Blue City",
+          "attractions": [
+            "Mehrangarh Fort",
+            "Umaid Bhawan Palace",
+            "Clock Tower Market"
+          ],
+          "specialties": ["Blue houses", "Desert safaris"]
+        },
+        {
+          "name": "Jaisalmer",
+          "nickname": "Golden City",
+          "attractions": [
+            "Jaisalmer Fort",
+            "Sam Sand Dunes",
+            "Desert camping"
+          ],
+          "specialties": ["Camel safaris", "Desert camping"]
+        }
+      ],
+      "experiences": [
+        {
+          "name": "Desert Safari",
+          "duration": "Half day to overnight",
+          "price_range": "2000-8000",
+          "includes": ["Camel ride", "Cultural show", "Dinner"]
+        },
+        {
+          "name": "Palace Hotel Stay",
+          "duration": "1-3 nights",
+          "price_range": "8000-50000",
+          "includes": ["Royal accommodation", "Heritage dining"]
+        }
+      ],
+      "travel_info": {
+        "best_season": "October to March",
+        "duration": "7-10 days",
+        "difficulty_level": "Moderate"
+      },
+      "tips": [
+        "Book heritage hotels well in advance",
+        "Carry sun protection in desert areas",
+        "Bargain in local markets",
+        "Try local Rajasthani cuisine",
+        "Respect local customs and dress modestly"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1477587458883-47145ed94245?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      ],
+      "rating": 4.8,
+      "reviews_count": 6890,
+      "tags": ["heritage", "palaces", "desert", "culture", "luxury"]
+    },
+    {
+      "id": 5,
+      "name": "Himalayan Adventure",
+      "slug": "himalayan-adventure",
+      "category": "adventure",
+      "location": {
+        "city": "Manali",
+        "state": "Himachal Pradesh",
+        "country": "India",
+        "coordinates": {
+          "lat": 32.2432,
+          "lng": 77.1892
+        }
+      },
+      "pricing": {
+        "trekking_packages": "2500-8000",
+        "adventure_sports": "500-3000",
+        "currency": "INR"
+      },
+      "description": {
+        "short": "Breathtaking mountain views and adventure sports",
+        "long": "Experience the majestic Himalayas with guided trekking, mountain climbing, and breathtaking views of snow-capped peaks. From easy nature walks to challenging high-altitude treks, the Himalayas offer adventure for every level.",
+        "highlights": [
+          "Snow-capped mountain peaks",
+          "Adventure sports activities",
+          "Scenic trekking trails",
+          "Alpine meadows",
+          "Mountain wildlife"
+        ]
+      },
+      "activities": [
+        {
+          "name": "Trekking",
+          "difficulty": "Easy to Extreme",
+          "popular_routes": ["Valley of Flowers", "Roopkund", "Kedarnath"]
+        },
+        {
+          "name": "River Rafting",
+          "difficulty": "Moderate",
+          "locations": ["Rishikesh", "Manali"]
+        },
+        {
+          "name": "Paragliding",
+          "difficulty": "Easy",
+          "locations": ["Bir Billing", "Solang Valley"]
+        }
+      ],
+      "travel_info": {
+        "best_season": "April to October",
+        "duration": "5-14 days",
+        "difficulty_level": "Moderate to Challenging"
+      },
+      "tips": [
+        "Acclimatize properly at high altitudes",
+        "Carry proper trekking gear",
+        "Check weather conditions before trekking",
+        "Hire experienced local guides",
+        "Carry emergency medical kit"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      ],
+      "rating": 4.8,
+      "reviews_count": 4230,
+      "tags": ["adventure", "trekking", "mountains", "nature", "sports"]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-09-20",
+    "total_destinations": 5,
+    "categories": ["heritage", "beach", "nature", "adventure"]
+  }
+}

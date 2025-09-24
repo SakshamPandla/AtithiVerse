@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "AtithiVerse",
+    "version": "2.0.0",
+    "description": "AI-Powered Indian Travel Assistant",
+    "author": "AtithiVerse Team",
+    "contact": "hello@atithiverse.com",
+    "website": "https://atithiverse.com"
+  },
+  "ai": {
+    "ollama": {
+      "server": "http://127.0.0.1:11434",
+      "models": {
+        "default": "llama2",
+        "alternatives": ["gemma3:4b", "mistral", "codellama"]
+      },
+      "timeout": 25,
+      "max_retries": 3
+    },
+    "embeddings": {
+      "model": "all-MiniLM-L6-v2",
+      "device": "cpu",
+      "enabled": true
+    },
+    "fallback": {
+      "enabled": true,
+      "response_limit": 250,
+      "use_templates": true
+    }
+  },
+  "database": {
+    "type": "sqlite",
+    "name": "atithiverse.db",
+    "backup_enabled": true,
+    "backup_interval": "daily"
+  },
+  "api": {
+    "rate_limiting": {
+      "enabled": false,
+      "requests_per_minute": 60
+    },
+    "cors": {
+      "origins": [
+        "http://127.0.0.1:5000",
+        "http://localhost:5000",
+        "https://atithiverse.com"
+      ]
+    },
+    "timeout": 30
+  },
+  "features": {
+    "chatbot": true,
+    "booking": true,
+    "wishlist": true,
+    "reviews": true,
+    "newsletter": true,
+    "user_authentication": true,
+    "admin_panel": false
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "atithiverse.log",
+    "max_size": "10MB"
+  }
+}

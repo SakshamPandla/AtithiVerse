@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Taj Mahal",
+        "location": "Agra, Uttar Pradesh",
+        "description": "Iconic white marble mausoleum, UNESCO World Heritage site and symbol of eternal love",
+        "price": "₹500 for Indians, ₹1100 for foreigners",
+        "best_time": "October to March, sunrise visits recommended",
+        "tips": "Visit at sunrise for golden lighting, closed on Fridays, book online to avoid queues"
+    },
+    {
+        "name": "Goa Beaches",
+        "location": "Goa",
+        "description": "Pristine beaches with vibrant nightlife, water sports, and Portuguese heritage",
+        "price": "₹2000-5000 per day including accommodation and food",
+        "best_time": "November to March for perfect weather",
+        "tips": "North Goa for parties and nightlife, South Goa for peaceful beaches and relaxation"
+    },
+    {
+        "name": "Kerala Backwaters",
+        "location": "Alleppey, Kumarakom, Kerala",
+        "description": "Serene houseboat experience through interconnected waterways in God's Own Country",
+        "price": "₹4000-12000 per night for houseboat stay",
+        "best_time": "September to March for pleasant weather",
+        "tips": "Book houseboats in advance, try traditional Kerala cuisine, combine with hill stations"
+    },
+    {
+        "name": "Rajasthan Palaces",
+        "location": "Jaipur, Udaipur, Jodhpur, Rajasthan",
+        "description": "Magnificent royal palaces showcasing Rajput architecture and desert culture",
+        "price": "₹300-500 for palace entries, luxury stays ₹8000-50000/night",
+        "best_time": "October to March to avoid extreme heat",
+        "tips": "Stay in heritage hotels, enjoy camel safaris, attend cultural performances"
+    }
+]

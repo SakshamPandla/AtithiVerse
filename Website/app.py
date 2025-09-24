@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, jsonify, url_for, session, redirect, flash
+import requests
+from datetime import datetime
 from flask_cors import CORS
 import os
 import sqlite3
@@ -7,6 +9,9 @@ import secrets
 from datetime import datetime, timedelta
 import json
 from functools import wraps
+import numpy as np
+from dotenv import load_dotenv
+from pathlib import Path
 
 # Create Flask app instance
 app = Flask(__name__, 
@@ -16,8 +21,218 @@ app = Flask(__name__,
 app.secret_key = 'incredible_india_secret_key_2025'
 CORS(app)
 
+# Load environment variables
+load_dotenv()
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
+GOOGLE_SEARCH_API_KEY = os.getenv('GOOGLE_SEARCH_API_KEY', '')
+GOOGLE_SEARCH_CX = os.getenv('GOOGLE_SEARCH_CX', '')
+
 # Database configuration
 DATABASE = 'atithiverse.db'
+
+# ===== WEATHER API INTEGRATION =====
+WEATHER_API_KEY = "f3892078c6b88350c7dca2235e640010"  # Your actual API key
+
+@app.route('/api/weather/<city>')
+def get_weather(city):
+    """Get current weather data for a city"""
+    try:
+        # OpenWeatherMap API endpoint
+        url = f"http://api.openweathermap.org/data/2.5/weather"
+        params = {
+            'q': city,
+            'appid': WEATHER_API_KEY,
+            'units': 'metric'  # for Celsius
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Extract relevant weather data
+            weather_data = {
+                'success': True,
+                'city': data['name'],
+                'country': data['sys']['country'],
+                'temperature': round(data['main']['temp']),
+                'feels_like': round(data['main']['feels_like']),
+                'humidity': data['main']['humidity'],
+                'pressure': data['main']['pressure'],
+                'visibility': data.get('visibility', 0) // 1000,  # Convert to km
+                'wind_speed': data['wind']['speed'],
+                'wind_direction': data['wind'].get('deg', 0),
+                'weather_main': data['weather'][0]['main'],
+                'weather_description': data['weather'][0]['description'].title(),
+                'weather_icon': data['weather'][0]['icon'],
+                'sunrise': datetime.fromtimestamp(data['sys']['sunrise']).strftime('%H:%M'),
+                'sunset': datetime.fromtimestamp(data['sys']['sunset']).strftime('%H:%M'),
+                'timestamp': datetime.now().strftime('%H:%M, %B %d')
+            }
+            
+            return jsonify(weather_data)
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Weather data not available'
+            }), 404
+            
+    except requests.RequestException as e:
+        return jsonify({
+            'success': False,
+            'error': 'Failed to fetch weather data'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
+        }), 500
+
+@app.route('/api/weather/forecast/<city>')
+def get_weather_forecast(city):
+    """Get 5-day weather forecast for a city"""
+    try:
+        # OpenWeatherMap API endpoint for 5-day forecast
+        url = f"http://api.openweathermap.org/data/2.5/forecast"
+        params = {
+            'q': city,
+            'appid': WEATHER_API_KEY,
+            'units': 'metric'  # for Celsius
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Process forecast data - group by day and get daily summaries
+            daily_forecasts = {}
+            
+            for item in data['list']:
+                date = datetime.fromtimestamp(item['dt']).strftime('%Y-%m-%d')
+                time = datetime.fromtimestamp(item['dt']).strftime('%H:%M')
+                
+                if date not in daily_forecasts:
+                    daily_forecasts[date] = {
+                        'date': date,
+                        'day_name': datetime.fromtimestamp(item['dt']).strftime('%A'),
+                        'temps': [],
+                        'weather_conditions': [],
+                        'humidity': [],
+                        'wind_speed': [],
+                        'times': []
+                    }
+                
+                daily_forecasts[date]['temps'].append(item['main']['temp'])
+                daily_forecasts[date]['weather_conditions'].append({
+                    'main': item['weather'][0]['main'],
+                    'description': item['weather'][0]['description'],
+                    'icon': item['weather'][0]['icon']
+                })
+                daily_forecasts[date]['humidity'].append(item['main']['humidity'])
+                daily_forecasts[date]['wind_speed'].append(item['wind']['speed'])
+                daily_forecasts[date]['times'].append(time)
+            
+            # Convert to list and calculate daily summaries
+            forecast_list = []
+            for date, day_data in list(daily_forecasts.items())[:5]:  # Limit to 5 days
+                # Calculate min/max temperatures
+                min_temp = round(min(day_data['temps']))
+                max_temp = round(max(day_data['temps']))
+                
+                # Get most common weather condition for the day
+                weather_counts = {}
+                for condition in day_data['weather_conditions']:
+                    key = condition['main']
+                    if key not in weather_counts:
+                        weather_counts[key] = {'count': 0, 'data': condition}
+                    weather_counts[key]['count'] += 1
+                
+                most_common_weather = max(weather_counts.items(), key=lambda x: x[1]['count'])[1]['data']
+                
+                # Calculate averages
+                avg_humidity = round(sum(day_data['humidity']) / len(day_data['humidity']))
+                avg_wind_speed = round(sum(day_data['wind_speed']) / len(day_data['wind_speed']), 1)
+                
+                forecast_list.append({
+                    'date': date,
+                    'day_name': day_data['day_name'],
+                    'min_temp': min_temp,
+                    'max_temp': max_temp,
+                    'weather_main': most_common_weather['main'],
+                    'weather_description': most_common_weather['description'].title(),
+                    'weather_icon': most_common_weather['icon'],
+                    'humidity': avg_humidity,
+                    'wind_speed': avg_wind_speed
+                })
+            
+            return jsonify({
+                'success': True,
+                'city': data['city']['name'],
+                'country': data['city']['country'],
+                'forecast': forecast_list
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Forecast data not available'
+            }), 404
+            
+    except requests.RequestException as e:
+        return jsonify({
+            'success': False,
+            'error': 'Failed to fetch forecast data'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
+        }), 500
+
+# ===== GOOGLE CUSTOM SEARCH (Programmable Search) =====
+@app.route('/api/google-search')
+def google_search():
+    """Proxy to Google Custom Search JSON API for safer client usage.
+    Requires env GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX.
+    Query params: q (required), num (optional, default 5)
+    """
+    if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
+        return jsonify({'success': False, 'error': 'Search API not configured'}), 500
+
+    query = request.args.get('q', '').strip()
+    num = int(request.args.get('num', '5'))
+    if not query:
+        return jsonify({'success': False, 'error': 'Missing query'}), 400
+
+    try:
+        url = 'https://www.googleapis.com/customsearch/v1'
+        params = {
+            'key': GOOGLE_SEARCH_API_KEY,
+            'cx': GOOGLE_SEARCH_CX,
+            'q': query,
+            'num': max(1, min(num, 10))
+        }
+        resp = requests.get(url, params=params, timeout=10)
+        data = resp.json()
+
+        results = []
+        for item in data.get('items', [])[:num]:
+            img = None
+            try:
+                img = item.get('pagemap', {}).get('cse_image', [{}])[0].get('src')
+            except Exception:
+                img = None
+            results.append({
+                'title': item.get('title'),
+                'link': item.get('link'),
+                'snippet': item.get('snippet'),
+                'displayLink': item.get('displayLink'),
+                'image': img
+            })
+
+        return jsonify({'success': True, 'query': query, 'results': results})
+    except Exception as e:
+        return jsonify({'success': False, 'error': 'Search failed'}), 500
 
 def get_db_connection():
     """Create database connection"""
@@ -147,7 +362,7 @@ def generate_booking_id():
     random_str = secrets.token_hex(4).upper()
     return f"ATI{timestamp}{random_str}"
 
-# Enhanced destinations data
+# Enhanced destinations data with weather-friendly locations
 destinations = [
     {
         'id': 1,
@@ -180,7 +395,7 @@ destinations = [
         'description': 'Pristine beaches with vibrant nightlife and water sports',
         'long_description': 'Goa is a state in western India with coastlines stretching along the Arabian Sea. Its long history as a Portuguese colony prior to 1961 is evident in its preserved 17th-century churches and the area\'s tropical spice plantations.',
         'features': ['Beach Activities', 'Water Sports', 'Nightlife', 'Seafood'],
-        'location': 'Goa',
+        'location': 'Panaji, Goa',
         'duration': '2-3 days',
         'max_people': 30,
         'included': ['Beach Access', 'Water Sports Equipment', 'Accommodation'],
@@ -218,7 +433,7 @@ destinations = [
         'description': 'Serene houseboat experience in God\'s Own Country',
         'long_description': 'The Kerala backwaters are a network of brackish lagoons and lakes lying parallel to the Arabian Sea coast of Kerala state in southern India.',
         'features': ['Houseboat Stay', 'Ayurvedic Spa', 'Local Cuisine', 'Bird Watching'],
-        'location': 'Alleppey, Kerala',
+        'location': 'Kochi, Kerala',
         'duration': '1-2 days',
         'max_people': 8,
         'included': ['Houseboat Stay', 'All Meals', 'Local Guide', 'Transfers'],
@@ -237,7 +452,7 @@ destinations = [
         'description': 'Breathtaking mountain views and trekking experiences',
         'long_description': 'Experience the majestic Himalayas with guided trekking, mountain climbing, and breathtaking views of snow-capped peaks.',
         'features': ['Trekking', 'Mountain Views', 'Adventure Sports', 'Camping'],
-        'location': 'Himachal Pradesh',
+        'location': 'Shimla, Himachal Pradesh',
         'duration': '5-7 days',
         'max_people': 12,
         'included': ['Trekking Equipment', 'Guide', 'Camping', 'Meals'],
@@ -252,7 +467,7 @@ destinations = [
         'reviews': 2340,
         'price': 15000,
         'original_price': 18000,
-        'image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+        'image': 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         'description': 'Luxury palace hotel floating on Lake Pichola',
         'long_description': 'The Lake Palace is a luxury hotel, which has 83 rooms and suites featuring white marble walls, lotus leaves and elaborate glass work.',
         'features': ['Luxury Stay', 'Lake Views', 'Royal Dining', 'Spa Services'],
@@ -689,11 +904,139 @@ def subscribe_newsletter():
             'message': 'Subscription failed. Please try again.'
         }), 500
 
+# ===== AI CHATBOT ROUTES =====
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    """AI Chatbot endpoint - integrates with travel_bot.py service"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'user_input' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Missing user_input in request'
+            }), 400
+        
+        user_input = data['user_input']
+        conversation_history = data.get('conversation_history', [])
+        user_id = data.get('user_id')
+        
+        # Try to connect to the AI service (travel_bot.py on port 5001)
+        try:
+            ai_response = requests.post(
+                'http://127.0.0.1:5001/travel-chat',
+                json={
+                    'user_input': user_input,
+                    'context': {
+                        'user_id': user_id,
+                        'conversation_history': conversation_history
+                    }
+                },
+                timeout=30
+            )
+            
+            if ai_response.status_code == 200:
+                ai_data = ai_response.json()
+                return jsonify({
+                    'success': True,
+                    'response': ai_data.get('response', 'Sorry, I could not generate a response.'),
+                    'ai_powered': ai_data.get('ai_powered', True),
+                    'suggestions': ai_data.get('suggestions', [])
+                })
+            else:
+                raise Exception(f"AI service returned status {ai_response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ AI service connection failed: {e}")
+            # Fallback to local responses
+            fallback_response = get_local_fallback_response(user_input)
+            return jsonify({
+                'success': True,
+                'response': fallback_response,
+                'ai_powered': False,
+                'suggestions': get_local_suggestions(user_input)
+            })
+        
+    except Exception as e:
+        print(f"❌ Error in /api/chat endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
+        }), 500
+
+def get_local_fallback_response(user_input):
+    """Local fallback responses when AI service is unavailable"""
+    input_lower = user_input.lower()
+    
+    if any(word in input_lower for word in ['hello', 'hi', 'hey']):
+        return "👋 Hello! I'm AtithiBot, your travel assistant for Incredible India! I can help you with destinations, travel tips, and planning your perfect trip. What would you like to explore today?"
+    
+    elif any(word in input_lower for word in ['taj mahal', 'agra']):
+        return "🏛️ The Taj Mahal is absolutely stunning! Entry costs ₹500 for Indians, ₹1100 for foreigners. Best visited at sunrise (6 AM) or sunset. Don't miss the Agra Fort nearby! Planning a visit?"
+    
+    elif any(word in input_lower for word in ['goa', 'beach']):
+        return "🏖️ Goa is perfect year-round! North Goa (Baga, Calangute) for nightlife, South Goa (Palolem, Arambol) for peace. November-March is ideal weather. Budget ₹2,000-4,000/day. What interests you most?"
+    
+    elif any(word in input_lower for word in ['kerala', 'backwater']):
+        return "🌴 Kerala backwaters are magical! Alleppey houseboats cost ₹3,000-12,000/night. October-March is perfect. Must-try: Ayurvedic massage, appam with curry, coconut water fresh from trees!"
+    
+    elif any(word in input_lower for word in ['rajasthan', 'jaipur', 'udaipur']):
+        return "🏰 Royal Rajasthan awaits! Jaipur (Pink City), Udaipur (Lake Palace), Jodhpur (Blue City). Palace hotels from ₹5,000/night. October-March best. Camel safaris, folk dances, incredible architecture!"
+    
+    elif any(word in input_lower for word in ['budget', 'cheap', 'cost']):
+        return "💰 India is incredibly budget-friendly! Daily costs: Hostels ₹500-1,500, Food ₹200-800, Transport ₹100-500, Attractions ₹50-500. Total ₹1,500-3,000/day comfortably!"
+    
+    elif any(word in input_lower for word in ['plan', 'trip', 'itinerary']):
+        return "✈️ I'd love to help plan your trip! Tell me: How many days? What interests you (history, beaches, mountains, culture)? Your budget range? Then I can suggest the perfect itinerary!"
+    
+    elif any(word in input_lower for word in ['book', 'booking', 'reserve']):
+        return "📅 You can book amazing experiences right here on AtithiVerse! We offer destination tours, hotel bookings, and complete travel packages. What would you like to book?"
+    
+    elif any(word in input_lower for word in ['best time', 'when', 'weather']):
+        return "🌤️ India's best travel times:\n• Oct-Mar: Pleasant weather, perfect for most places\n• Apr-Jun: Hot, ideal for hill stations\n• Jul-Sep: Monsoon, great for Kerala backwaters\nWhere are you planning to go?"
+    
+    else:
+        return "🇮🇳 India offers incredible diversity! From the iconic Taj Mahal to serene Kerala backwaters, vibrant Goa beaches to royal Rajasthan palaces. What type of experience calls to you?"
+
+def get_local_suggestions(user_input):
+    """Generate local suggestions when AI service is unavailable"""
+    input_lower = user_input.lower()
+    
+    if any(word in input_lower for word in ['taj mahal', 'agra']):
+        return [
+            "Best time to visit Taj Mahal",
+            "Agra itinerary for 2 days",
+            "Hotels near Taj Mahal",
+            "Book Taj Mahal tour"
+        ]
+    elif any(word in input_lower for word in ['goa', 'beach']):
+        return [
+            "Best beaches in Goa",
+            "Goa nightlife guide",
+            "Water sports in Goa",
+            "Book Goa package"
+        ]
+    elif any(word in input_lower for word in ['budget']):
+        return [
+            "Budget India itinerary",
+            "Cheap places to stay",
+            "Free attractions in India",
+            "Budget food options"
+        ]
+    else:
+        return [
+            "Popular destinations",
+            "Best time to visit India",
+            "Budget travel tips",
+            "Plan my trip"
+        ]
+
 # ===== TEMPLATE ROUTES =====
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', google_maps_api_key=GOOGLE_MAPS_API_KEY)
 
 @app.route('/login')
 def login():
@@ -713,10 +1056,31 @@ def contact():
 
 @app.route('/destination/<int:dest_id>')
 def destination_detail(dest_id):
-    destination = next((d for d in destinations if d['id'] == dest_id), None)
-    if not destination:
-        return render_template('404.html'), 404
-    return render_template('destination.html', destination=destination)
+    """Show detailed destination page with weather widget"""
+    try:
+        print(f"🔍 Requesting destination ID: {dest_id}")
+        
+        # Find destination in your hardcoded data
+        destination = next((d for d in destinations if d.get('id') == dest_id), None)
+        
+        if not destination:
+            print(f"❌ Destination {dest_id} not found")
+            flash('Destination not found', 'error')
+            return redirect(url_for('index'))
+        
+        print(f"✅ Found destination: {destination['name']}")
+        print(f"📊 Destination data keys: {list(destination.keys())}")
+        
+        return render_template('destination_detail.html', destination=destination)
+        
+    except Exception as e:
+        print(f"❌ ERROR in destination_detail: {e}")
+        print(f"📍 Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        
+        flash('Error loading destination page', 'error')
+        return redirect(url_for('index'))
 
 # ===== ERROR HANDLERS =====
 
@@ -729,8 +1093,9 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    print("🚀 Starting AtithiVerse with Enhanced Functionality...")
+    print("🚀 Starting AtithiVerse with Weather Integration...")
     print("📊 Database: SQLite with full user management")
+    print("🌤️ Weather: OpenWeatherMap API integration")
     print("🔐 Features: Authentication, Booking, Reviews, Wishlist")
     print("📱 API: RESTful endpoints for all features")
     print("📍 Visit: http://127.0.0.1:5000")
