@@ -1,0 +1,141 @@
+{
+  "packages": [
+    {
+      "id": "pkg_001",
+      "name": "Golden Triangle Classic",
+      "duration": 7,
+      "destinations": ["Delhi", "Agra", "Jaipur"],
+      "price_range": {
+        "budget": 25000,
+        "standard": 45000,
+        "luxury": 85000
+      },
+      "inclusions": [
+        "Accommodation",
+        "Transportation", 
+        "Guide services",
+        "Entry fees"
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "location": "Delhi",
+          "activities": ["Red Fort", "India Gate", "Qutub Minar"],
+          "accommodation": "Delhi Hotel"
+        },
+        {
+          "day": 2,
+          "location": "Delhi to Agra",
+          "activities": ["Travel", "Agra Fort", "Local bazaar"],
+          "accommodation": "Agra Hotel"
+        },
+        {
+          "day": 3,
+          "location": "Agra",
+          "activities": ["Taj Mahal sunrise", "Mehtab Bagh sunset"],
+          "accommodation": "Agra Hotel"
+        },
+        {
+          "day": 4,
+          "location": "Agra to Jaipur",
+          "activities": ["Travel", "Fatehpur Sikri", "Arrival Jaipur"],
+          "accommodation": "Jaipur Hotel"
+        },
+        {
+          "day": 5,
+          "location": "Jaipur",
+          "activities": ["City Palace", "Hawa Mahal", "Local markets"],
+          "accommodation": "Jaipur Hotel"
+        },
+        {
+          "day": 6,
+          "location": "Jaipur",
+          "activities": ["Amber Fort", "Jantar Mantar", "Shopping"],
+          "accommodation": "Jaipur Hotel"
+        },
+        {
+          "day": 7,
+          "location": "Jaipur to Delhi",
+          "activities": ["Travel back", "Departure"],
+          "accommodation": "Day use"
+        }
+      ]
+    },
+    {
+      "id": "pkg_002", 
+      "name": "Kerala Backwater Bliss",
+      "duration": 5,
+      "destinations": ["Cochin", "Alleppey", "Munnar"],
+      "price_range": {
+        "budget": 20000,
+        "standard": 35000,
+        "luxury": 65000
+      },
+      "inclusions": [
+        "Houseboat stay",
+        "Hill station accommodation",
+        "All meals",
+        "Airport transfers"
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "location": "Cochin",
+          "activities": ["Arrival", "Chinese fishing nets", "Fort Kochi"],
+          "accommodation": "Cochin Hotel"
+        },
+        {
+          "day": 2,
+          "location": "Cochin to Alleppey",
+          "activities": ["Travel", "Houseboat boarding", "Backwater cruise"],
+          "accommodation": "Houseboat"
+        },
+        {
+          "day": 3,
+          "location": "Alleppey to Munnar",
+          "activities": ["Travel", "Tea plantation visit", "Hill station"],
+          "accommodation": "Munnar Resort"
+        },
+        {
+          "day": 4,
+          "location": "Munnar",
+          "activities": ["Echo Point", "Mattupetty Dam", "Tea factory"],
+          "accommodation": "Munnar Resort"
+        },
+        {
+          "day": 5,
+          "location": "Munnar to Cochin",
+          "activities": ["Travel", "Departure"],
+          "accommodation": "Day use"
+        }
+      ]
+    },
+    {
+      "id": "pkg_003",
+      "name": "Rajasthan Royal Experience",
+      "duration": 10,
+      "destinations": ["Jaipur", "Udaipur", "Jodhpur", "Jaisalmer"],
+      "price_range": {
+        "budget": 45000,
+        "standard": 75000,
+        "luxury": 150000
+      },
+      "inclusions": [
+        "Palace hotel stays",
+        "Desert safari",
+        "Cultural performances",
+        "All transfers"
+      ],
+      "highlights": [
+        "Stay in heritage palaces",
+        "Camel safari in Thar desert",
+        "Traditional Rajasthani cuisine",
+        "Folk dance performances"
+      ]
+    }
+  ],
+  "metadata": {
+    "total_packages": 3,
+    "last_updated": "2025-09-20"
+  }
+}

@@ -198,6 +198,75 @@
         <i class="fas fa-chevron-up"></i>
     </button>
 
+    <!-- AI Chatbot Widget -->
+<div class="chatbot-widget" id="chatbotWidget">
+    <!-- Floating Chat Button -->
+    <div class="chat-button" id="chatButton">
+        <i class="fas fa-robot"></i>
+        <div class="pulse-ring"></div>
+    </div>
+    
+    <!-- Chat Window -->
+    <div class="chat-window" id="chatWindow">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="chat-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="chat-info">
+                <h4>AtithiBot</h4>
+                <span class="status online">Online</span>
+            </div>
+            <button class="chat-close" id="chatClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>👋 Hi! I'm AtithiBot, your travel assistant. How can I help you explore Incredible India today?</p>
+                    <span class="message-time">Just now</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions" id="quickActions">
+            <button class="quick-btn" data-message="Show me popular destinations">
+                🏛️ Popular Places
+            </button>
+            <button class="quick-btn" data-message="What's the best time to visit India?">
+                🌤️ Best Time to Visit
+            </button>
+            <button class="quick-btn" data-message="Help me plan a trip">
+                ✈️ Plan Trip
+            </button>
+            <button class="quick-btn" data-message="Show me budget options">
+                💰 Budget Options
+            </button>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Ask me anything about travel..." maxlength="500">
+                <button class="send-button" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-footer">
+                <small>Powered by AtithiVerse AI</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

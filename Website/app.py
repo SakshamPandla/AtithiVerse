@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, jsonify, url_for, session, redirect, flash
+import requests
+from datetime import datetime
 from flask_cors import CORS
 import os
 import sqlite3
@@ -7,6 +9,10 @@ import secrets
 from datetime import datetime, timedelta
 import json
 from functools import wraps
+import numpy as np
+from dotenv import load_dotenv
+from pathlib import Path
+import json
 
 # Create Flask app instance
 app = Flask(__name__, 
@@ -252,7 +258,7 @@ destinations = [
         'reviews': 2340,
         'price': 15000,
         'original_price': 18000,
-        'image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+        'image': 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         'description': 'Luxury palace hotel floating on Lake Pichola',
         'long_description': 'The Lake Palace is a luxury hotel, which has 83 rooms and suites featuring white marble walls, lotus leaves and elaborate glass work.',
         'features': ['Luxury Stay', 'Lake Views', 'Royal Dining', 'Spa Services'],
@@ -593,6 +599,340 @@ def toggle_wishlist():
             'success': False,
             'message': 'Error updating wishlist'
         }), 500
+    
+
+# ===== ENHANCED AI CHAT WITH OLLAMA INTEGRATION =====
+
+# Add these imports at the top of your app.py (if not already present)
+import numpy as np
+from dotenv import load_dotenv
+
+# Try to import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+    USE_EMBEDDINGS = True
+    print("✅ SentenceTransformer available")
+except ImportError:
+    USE_EMBEDDINGS = False
+    print("⚠️ SentenceTransformer not available, using keyword search")
+
+# Load environment variables
+load_dotenv()
+
+# Ollama configuration
+OLLAMA_SERVER = os.getenv("OLLAMA_SERVER", "http://127.0.0.1:11434")
+OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "llama2")
+
+# Initialize embedding model
+embedder = None
+if USE_EMBEDDINGS:
+    try:
+        print("📥 Loading SentenceTransformer model...")
+        embedder = SentenceTransformer("all-MiniLM-L6-v2", device='cpu')
+        print("✅ SentenceTransformer loaded successfully!")
+    except Exception as e:
+        print(f"❌ Error loading SentenceTransformer: {e}")
+        embedder = None
+
+# Load travel data
+def read_travel_data():
+    """Load travel data from JSON file"""
+    try:
+        with open("data.json", "r", encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("⚠️ data.json not found, using built-in travel data")
+        return [
+            {
+                "name": "Taj Mahal",
+                "location": "Agra, India",
+                "description": "Iconic white marble mausoleum, symbol of love",
+                "price": "₹500 for Indians, ₹1100 for foreigners",
+                "best_time": "October to March",
+                "tips": "Visit at sunrise for best experience, closed on Fridays"
+            },
+            {
+                "name": "Goa Beaches",
+                "location": "Goa, India", 
+                "description": "Pristine beaches with vibrant nightlife",
+                "price": "₹2000-5000 per day",
+                "best_time": "November to March",
+                "tips": "North Goa for parties, South Goa for peace"
+            },
+            {
+                "name": "Kerala Backwaters",
+                "location": "Kerala, India",
+                "description": "Serene houseboat experience in God's Own Country",
+                "price": "₹4000-12000 per night",
+                "best_time": "September to March", 
+                "tips": "Book houseboat in advance, try local cuisine"
+            }
+        ]
+    except Exception as e:
+        print(f"Error reading travel data: {e}")
+        return []
+
+# Load travel documents
+travel_data = read_travel_data()
+travel_documents = []
+for item in travel_data:
+    doc = f"Name: {item.get('name', '')}\nLocation: {item.get('location', '')}\nDescription: {item.get('description', '')}\nPrice: {item.get('price', '')}\nBest Time: {item.get('best_time', '')}\nTips: {item.get('tips', '')}"
+    travel_documents.append(doc)
+
+print(f"📚 Loaded {len(travel_documents)} travel documents")
+
+# Search functions
+def get_embedding(text: str):
+    if embedder:
+        return embedder.encode(text, convert_to_tensor=False).tolist()
+    return None
+
+def keyword_search(query, docs, top_k=3):
+    """Fallback keyword-based search"""
+    if not docs:
+        return []
+    
+    query_words = set(query.lower().split())
+    scores = []
+    
+    for doc in docs:
+        doc_words = set(doc.lower().split())
+        exact_matches = len(query_words.intersection(doc_words))
+        partial_matches = sum(1 for qw in query_words 
+                            if any(qw in dw for dw in doc_words))
+        total_score = exact_matches + (partial_matches * 0.5)
+        scores.append((doc, total_score))
+    
+    scored_docs = sorted(scores, key=lambda x: x[1], reverse=True)
+    return [doc for doc, score in scored_docs[:top_k] if score > 0]
+
+def search_travel_docs(query, top_k=3):
+    """Search travel documents using embeddings or keywords"""
+    if embedder and travel_documents:
+        try:
+            query_emb = get_embedding(query)
+            if query_emb:
+                doc_embeddings = [get_embedding(doc) for doc in travel_documents]
+                scores = []
+                for doc_emb in doc_embeddings:
+                    if doc_emb:
+                        similarity = np.dot(query_emb, doc_emb) / (np.linalg.norm(query_emb) * np.linalg.norm(doc_emb))
+                        scores.append(similarity)
+                    else:
+                        scores.append(0)
+                
+                ranked = sorted(zip(travel_documents, scores), key=lambda x: x[1], reverse=True)
+                return [doc for doc, _ in ranked[:top_k]]
+        except Exception as e:
+            print(f"Embedding search failed: {e}")
+    
+    # Fallback to keyword search
+    return keyword_search(query, travel_documents, top_k)
+
+# Replace your existing /api/chat route with this enhanced version
+@app.route('/api/chat', methods=['POST'])
+def enhanced_ai_chat():
+    """Enhanced AI Chat with Ollama integration and travel context"""
+    try:
+        data = request.get_json()
+        user_input = data.get('user_input', '').strip()
+        
+        if not user_input:
+            return jsonify({
+                'success': False,
+                'error': 'Please enter a message'
+            }), 400
+        
+        print(f"🤖 Enhanced AI Chat request: {user_input}")
+        
+        # Search for relevant travel documents
+        relevant_docs = search_travel_docs(user_input)
+        context = "\n".join(relevant_docs) if relevant_docs else ""
+        
+        # Enhanced system prompt for travel assistance
+        system_prompt = f"""You are AtithiBot, an expert Indian travel assistant for AtithiVerse platform.
+
+CONTEXT INFORMATION:
+{context}
+
+INSTRUCTIONS:
+- Provide specific, actionable travel advice for India
+- Include approximate costs in Indian Rupees (₹) when relevant
+- Mention best times to visit and practical tips
+- Be enthusiastic about Indian culture and destinations
+- Keep responses under 250 words for better readability
+- Use emojis to make responses engaging
+- Always end with a helpful question to continue the conversation
+
+If the user asks about destinations, provide specific details about costs, timing, and insider tips.
+If no context is available, provide general travel advice for India."""
+
+        # Try Ollama AI first
+        ai_response = None
+        try:
+            payload = {
+                "model": OLLAMA_CHAT_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input}
+                ],
+                "stream": False
+            }
+            
+            print(f"🔗 Calling Ollama at {OLLAMA_SERVER}")
+            response = requests.post(f"{OLLAMA_SERVER}/api/chat", json=payload, timeout=25)
+            
+            if response.status_code == 200:
+                completion = response.json()
+                ai_response = completion["message"]["content"]
+                print(f"✅ Ollama response received: {len(ai_response)} chars")
+            else:
+                print(f"❌ Ollama error: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Ollama connection failed: {e}")
+        except Exception as e:
+            print(f"❌ Ollama error: {e}")
+        
+        # Use AI response or enhanced fallback
+        if ai_response:
+            final_response = ai_response
+            ai_powered = True
+        else:
+            final_response = get_smart_travel_fallback(user_input, context)
+            ai_powered = False
+        
+        # Generate smart suggestions
+        suggestions = get_contextual_suggestions(user_input, relevant_docs)
+        
+        return jsonify({
+            'success': True,
+            'response': final_response,
+            'suggestions': suggestions,
+            'timestamp': datetime.now().isoformat(),
+            'ai_powered': ai_powered,
+            'context_used': len(relevant_docs) > 0,
+            'search_method': 'embeddings' if embedder else 'keyword'
+        })
+        
+    except Exception as e:
+        print(f"❌ Enhanced chat error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'AI chat service temporarily unavailable'
+        }), 500
+
+def get_smart_travel_fallback(user_input, context):
+    """Enhanced fallback responses with travel context"""
+    input_lower = user_input.lower()
+    
+    # Use context if available
+    if context and any(word in input_lower for word in ['taj mahal', 'goa', 'kerala']):
+        return f"🏛️ Based on our travel database:\n\n{context[:400]}...\n\nWould you like more specific information about visiting times or costs? 🤔"
+    
+    # Context-aware responses
+    if 'popular' in input_lower and 'destination' in input_lower:
+        return """🏛️ **India's Most Popular Destinations:**
+
+✨ **Golden Triangle**:
+• **Delhi**: Red Fort, India Gate (₹30-500)
+• **Agra**: Taj Mahal (₹500 Indians, ₹1100 foreigners)  
+• **Jaipur**: City Palace, Amber Fort (₹400-500)
+
+🏖️ **Beach Paradise**:
+• **Goa**: ₹2,000-5,000/day (Nov-Mar best)
+• **Kerala**: Backwaters ₹4,000-12,000/night
+• **Andaman**: Crystal waters, diving
+
+🏔️ **Mountain Escapes**:
+• **Himachal**: Shimla, Manali (Apr-Jun)
+• **Kashmir**: Dal Lake, houseboats
+• **Uttarakhand**: Rishikesh yoga retreats
+
+Which type excites you most? 🗺️"""
+
+    elif any(word in input_lower for word in ['hello', 'hi', 'namaste']):
+        return """👋 **Namaste! I'm AtithiBot, your AI travel guide!**
+
+🇮🇳 I specialize in **Indian travel** with real-time insights and personalized recommendations!
+
+🎯 **I can help with**:
+• 🏛️ **Destination guides** with costs & timing
+• ✈️ **Trip planning** & custom itineraries
+• 💰 **Budget optimization** & money-saving tips
+• 📅 **Seasonal advice** & weather insights
+• 🍛 **Cultural experiences** & local secrets
+
+✨ **Try asking**:
+• "Show me popular destinations"
+• "Plan a 7-day North India trip"
+• "Best time to visit Kerala?"
+
+What adventure can I help you plan? 🗺️"""
+
+    elif any(word in input_lower for word in ['plan', 'trip', 'itinerary']):
+        return """✈️ **Let's Create Your Perfect Indian Journey!**
+
+🎯 **Tell me about**:
+
+📅 **Duration**: How many days?
+• 3-5 days: Single city/region
+• 7-10 days: Golden Triangle or regional tour
+• 2+ weeks: Multi-region exploration
+
+🎨 **Interests**:
+• 🏛️ **Heritage**: Palaces, forts, temples
+• 🏖️ **Relaxation**: Beaches, backwaters
+• 🏔️ **Adventure**: Trekking, mountains
+• 🕉️ **Spirituality**: Varanasi, Rishikesh
+
+💰 **Budget**: 
+• Budget: ₹2,000-4,000/day
+• Comfort: ₹5,000-10,000/day
+• Luxury: ₹15,000+/day
+
+Share your preferences for a personalized itinerary! 🌟"""
+
+    else:
+        return """🇮🇳 **Welcome to Incredible India with AtithiBot!**
+
+I'm your **AI-powered travel expert** with access to real travel data and current insights! 🤖✨
+
+🎯 **Instant Help With**:
+• 📍 **Destination Info**: Costs, timing, tips
+• 🗓️ **Trip Planning**: Custom itineraries
+• 💰 **Budget Advice**: Money-saving strategies
+• 🌤️ **Weather Guidance**: Best travel times
+• 🍛 **Cultural Tips**: Local experiences
+
+**🎪 Popular Queries**:
+• "Popular destinations in India"
+• "Plan a ₹50,000 budget trip"
+• "Best time for Kerala backwaters"
+
+What aspect of India would you like to explore? 🗺️🎉"""
+
+def get_contextual_suggestions(user_input, docs):
+    """Generate smart suggestions based on input and context"""
+    input_lower = user_input.lower()
+    
+    # Context-based suggestions
+    if docs and any('taj mahal' in doc.lower() for doc in docs):
+        return ["2-day Agra itinerary", "Best Taj Mahal timings", "Agra Fort combo", "Photography tips"]
+    elif docs and any('goa' in doc.lower() for doc in docs):
+        return ["North vs South Goa", "Beach activities", "Nightlife spots", "Monsoon travel"]
+    elif docs and any('kerala' in doc.lower() for doc in docs):
+        return ["Houseboat booking", "Hill stations", "Ayurveda spas", "Cuisine guide"]
+    
+    # Input-based suggestions
+    if 'popular' in input_lower:
+        return ["Golden Triangle tour", "Beach destinations", "Mountain retreats", "Cultural circuits"]
+    elif any(word in input_lower for word in ['plan', 'trip']):
+        return ["7-day itineraries", "Budget planning", "Best seasons", "Transportation"]
+    elif any(word in input_lower for word in ['budget', 'cost']):
+        return ["Money-saving tips", "Budget destinations", "Free attractions", "Local transport"]
+    else:
+        return ["Popular destinations", "Trip planning", "Best travel time", "Cultural experiences"]
 
 # ===== CONTACT & NEWSLETTER =====
 
@@ -713,10 +1053,31 @@ def contact():
 
 @app.route('/destination/<int:dest_id>')
 def destination_detail(dest_id):
-    destination = next((d for d in destinations if d['id'] == dest_id), None)
-    if not destination:
-        return render_template('404.html'), 404
-    return render_template('destination.html', destination=destination)
+    """Show detailed destination page with local guides"""
+    try:
+        print(f"🔍 Requesting destination ID: {dest_id}")
+        
+        # Find destination in your hardcoded data
+        destination = next((d for d in destinations if d.get('id') == dest_id), None)
+        
+        if not destination:
+            print(f"❌ Destination {dest_id} not found")
+            flash('Destination not found', 'error')
+            return redirect(url_for('index'))
+        
+        print(f"✅ Found destination: {destination['name']}")
+        print(f"📊 Destination data keys: {list(destination.keys())}")
+        
+        return render_template('destination_detail.html', destination=destination)
+        
+    except Exception as e:
+        print(f"❌ ERROR in destination_detail: {e}")
+        print(f"📍 Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        
+        flash('Error loading destination page', 'error')
+        return redirect(url_for('index'))
 
 # ===== ERROR HANDLERS =====
 

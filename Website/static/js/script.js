@@ -1,6 +1,9 @@
 // ===== GLOBAL VARIABLES =====
 let isLoading = true;
 let currentUser = null;
+let chatInitialized = false;
+let connectionRetries = 0;
+const MAX_RETRIES = 3;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +34,7 @@ function initializeApp() {
     initializeUserAuth();
     initializeBackToTop();
     initializeSearch();
+    initializeAIChatbot();
     
     // Page-specific initialization
     const currentPage = window.location.pathname;
@@ -382,17 +386,24 @@ function loadDestinations(category = 'all', searchTerm = '') {
             return response.json();
         })
         .then(data => {
-            console.log('📦 API Response data:', data);
+            console.log('📦 Raw API Response:', data);
+            
+            // Handle different response formats
+            let destinations;
             
             if (data.success && Array.isArray(data.destinations)) {
-                displayDestinations(data.destinations);
+                destinations = data.destinations;
+                console.log('✅ Using new API format');
             } else if (Array.isArray(data)) {
-                // Fallback for old format
-                displayDestinations(data);
+                destinations = data;
+                console.log('✅ Using old API format');
             } else {
-                console.error('❌ Invalid destinations data format:', data);
-                showErrorMessage('Invalid data format received');
+                console.error('❌ Invalid API response format:', data);
+                throw new Error('Invalid response format');
             }
+            
+            console.log(`✅ Found ${destinations.length} destinations`);
+            displayDestinations(destinations);
         })
         .catch(error => {
             console.error('❌ Error loading destinations:', error);
@@ -402,11 +413,20 @@ function loadDestinations(category = 'all', searchTerm = '') {
 
 function displayDestinations(destinations) {
     const grid = document.getElementById('destinationsGrid');
-    if (!grid) return;
+    if (!grid) {
+        console.error('❌ Grid element not found!');
+        return;
+    }
     
-    console.log(`🎨 Displaying ${destinations.length} destinations`);
+    console.log(`🎨 Displaying destinations:`, destinations);
     
-    if (!destinations || destinations.length === 0) {
+    if (!Array.isArray(destinations)) {
+        console.error('❌ destinations is not an array:', typeof destinations, destinations);
+        showErrorMessage('Invalid destinations data format');
+        return;
+    }
+    
+    if (destinations.length === 0) {
         grid.innerHTML = `
             <div class="col-12 text-center py-5">
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
@@ -469,7 +489,8 @@ function displayDestinations(destinations) {
         </div>
     `).join('');
     
-    // Reinitialize AOS for new elements
+    console.log('✅ Cards displayed successfully!');
+    
     if (typeof AOS !== 'undefined') {
         AOS.refresh();
     }
@@ -492,28 +513,26 @@ function showErrorMessage(message) {
 }
 
 function viewDestinationDetails(destinationId) {
-    console.log(`👁️ Viewing details for destination ID: ${destinationId}`);
+    console.log(`🔗 Opening destination detail page for ID: ${destinationId}`);
     
-    // Show loading notification
-    showNotification('Loading destination details...', 'info');
+    if (!destinationId) {
+        console.error('❌ No destination ID provided');
+        showNotification('Invalid destination ID', 'error');
+        return;
+    }
     
-    fetch(`/api/destinations/${destinationId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.destination) {
-                showDestinationModal(data.destination);
-            } else {
-                throw new Error(data.message || 'Destination not found');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading destination details:', error);
-            showNotification('Error loading destination details.', 'error');
-        });
+    // Navigate to destination detail page (same tab)
+    window.location.href = `/destination/${destinationId}`;
+    
+    // OR open in new tab (uncomment the line below if you prefer new tab)
+    // window.open(`/destination/${destinationId}`, '_blank');
+    
+    // Show loading notification while navigating
+    showNotification('Opening destination details...', 'info');
 }
 
+
 function showDestinationModal(destination) {
-    // Create modal HTML
     const modalHtml = `
         <div class="modal fade" id="destinationModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -566,20 +585,16 @@ function showDestinationModal(destination) {
         </div>
     `;
 
-    // Remove existing modal if any
     const existingModal = document.getElementById('destinationModal');
     if (existingModal) {
         existingModal.remove();
     }
 
-    // Add modal to body
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('destinationModal'));
     modal.show();
 
-    // Clean up on hide
     document.getElementById('destinationModal').addEventListener('hidden.bs.modal', function() {
         this.remove();
     });
@@ -611,7 +626,6 @@ function toggleWishlist(destinationId, button) {
         if (result.success) {
             const inWishlist = result.in_wishlist;
             
-            // Update button
             button.innerHTML = `<i class="fas fa-heart me-1"></i>${inWishlist ? 'Saved' : 'Save'}`;
             button.classList.toggle('btn-danger', inWishlist);
             button.classList.toggle('btn-outline-primary', !inWishlist);
@@ -644,7 +658,6 @@ function bookNow(destinationId) {
     }
 
     showNotification('Booking feature coming soon!', 'info');
-    // TODO: Implement booking functionality
 }
 
 function initializeNewsletterForm() {
@@ -668,7 +681,6 @@ function initializeNewsletterForm() {
             return;
         }
 
-        // Show loading state
         const originalText = subscribeBtn.innerHTML;
         subscribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Subscribing...';
         subscribeBtn.disabled = true;
@@ -694,13 +706,11 @@ function initializeNewsletterForm() {
             showNotification('Subscription failed. Please try again.', 'error');
         })
         .finally(() => {
-            // Reset button
             subscribeBtn.innerHTML = originalText;
             subscribeBtn.disabled = false;
         });
     });
 
-    // Subscribe on Enter key
     emailInput?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             subscribeBtn?.click();
@@ -708,13 +718,347 @@ function initializeNewsletterForm() {
     });
 }
 
+// ===== ENHANCED AI CHATBOT FUNCTIONALITY =====
+function initializeAIChatbot() {
+    if (chatInitialized) return;
+    chatInitialized = true;
+    
+    console.log('🤖 Initializing AI Chatbot...');
+    
+    const chatButton = document.getElementById('chatButton');
+    const chatWindow = document.getElementById('chatWindow');
+    const chatClose = document.getElementById('chatClose');
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendButton');
+    const chatMessages = document.getElementById('chatMessages');
+    const quickActions = document.querySelectorAll('.quick-btn');
+
+    let conversationHistory = [];
+    let isConnected = false;
+
+    // Test AI connection on initialization
+    testAIConnection();
+
+    function testAIConnection() {
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_input: 'test connection' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            isConnected = data.success;
+            console.log(isConnected ? '✅ AI Service Connected' : '⚠️ AI Service Offline');
+            updateConnectionStatus();
+        })
+        .catch(() => {
+            isConnected = false;
+            console.log('❌ AI Service Connection Failed');
+            updateConnectionStatus();
+        });
+    }
+
+    function updateConnectionStatus() {
+        const statusElement = document.querySelector('.chat-header .status');
+        if (statusElement) {
+            if (isConnected) {
+                statusElement.innerHTML = '<i class="fas fa-brain"></i> AI Powered';
+                statusElement.classList.add('ai-powered');
+            } else {
+                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> Limited Mode';
+                statusElement.classList.add('offline-mode');
+            }
+        }
+    }
+
+    // Toggle chat window
+    chatButton?.addEventListener('click', function() {
+        chatWindow.classList.add('open');
+        chatInput?.focus();
+        console.log('💬 Chatbot opened');
+        
+        // Test connection when opening
+        if (!isConnected) {
+            testAIConnection();
+        }
+    });
+
+    chatClose?.addEventListener('click', function() {
+        chatWindow.classList.remove('open');
+    });
+
+    // Send message functionality
+    function sendMessage() {
+        const message = chatInput?.value.trim();
+        if (!message) return;
+
+        addMessage(message, 'user');
+        chatInput.value = '';
+        
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+
+        showTypingIndicator();
+        callAIService(message);
+    }
+
+    // Enhanced AI service call with retry logic
+    function callAIService(message, retryCount = 0) {
+        console.log(`🤖 Calling AI service with: "${message}" (attempt ${retryCount + 1})`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_input: message,
+                conversation_history: conversationHistory.slice(-5), // Last 5 exchanges
+                user_id: currentUser?.id,
+                timestamp: new Date().toISOString()
+            }),
+            signal: controller.signal
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            hideTypingIndicator();
+            
+            if (data.success) {
+                const aiResponse = data.response;
+                addMessage(aiResponse, 'bot');
+                
+                // Update conversation history
+                conversationHistory.push({
+                    user: message,
+                    bot: aiResponse,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Keep only last 10 conversations for memory management
+                if (conversationHistory.length > 10) {
+                    conversationHistory = conversationHistory.slice(-10);
+                }
+                
+                // Update quick actions
+                if (data.suggestions && data.suggestions.length > 0) {
+                    updateQuickActions(data.suggestions);
+                }
+                
+                // Update connection status
+                isConnected = data.ai_powered || false;
+                updateConnectionStatus();
+                
+                connectionRetries = 0; // Reset retry count on success
+            } else {
+                throw new Error(data.error || 'Unknown error occurred');
+            }
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            hideTypingIndicator();
+            
+            console.error(`❌ AI API Error (attempt ${retryCount + 1}):`, error);
+            
+            // Retry logic
+            if (retryCount < MAX_RETRIES && !error.name === 'AbortError') {
+                console.log(`🔄 Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+                setTimeout(() => {
+                    showTypingIndicator();
+                    callAIService(message, retryCount + 1);
+                }, 2000 * (retryCount + 1)); // Exponential backoff
+                return;
+            }
+            
+            // Fallback response after all retries failed
+            isConnected = false;
+            updateConnectionStatus();
+            
+            const fallbackResponse = getFallbackResponse(message);
+            addMessage(fallbackResponse, 'bot');
+            
+            // Show error notification for connection issues
+            if (error.name === 'AbortError') {
+                showNotification('Response timed out. The AI service might be busy.', 'warning');
+            } else {
+                showNotification('AI service temporarily unavailable. Using fallback responses.', 'warning');
+            }
+        })
+        .finally(() => {
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+        });
+    }
+
+    // Enhanced fallback responses
+    function getFallbackResponse(message) {
+        const input = message.toLowerCase();
+        
+        const responses = {
+            'hello|hi|hey': "👋 Hello! I'm AtithiBot, your travel assistant for Incredible India! I can help you with destinations, travel tips, and planning your perfect trip. What would you like to explore today?",
+            
+            'taj mahal|agra': "🏛️ The Taj Mahal is absolutely stunning! Entry costs ₹500 for Indians, ₹1100 for foreigners. Best visited at sunrise (6 AM) or sunset. Don't miss the Agra Fort nearby! Planning a visit?",
+            
+            'goa|beach': "🏖️ Goa is perfect year-round! North Goa (Baga, Calangute) for nightlife, South Goa (Palolem, Arambol) for peace. November-March is ideal weather. Budget ₹2,000-4,000/day. What interests you most?",
+            
+            'kerala|backwater': "🌴 Kerala backwaters are magical! Alleppey houseboats cost ₹3,000-12,000/night. October-March is perfect. Must-try: Ayurvedic massage, appam with curry, coconut water fresh from trees!",
+            
+            'rajasthan|jaipur|udaipur': "🏰 Royal Rajasthan awaits! Jaipur (Pink City), Udaipur (Lake Palace), Jodhpur (Blue City). Palace hotels from ₹5,000/night. October-March best. Camel safaris, folk dances, incredible architecture!",
+            
+            'budget|cheap|cost': "💰 India is incredibly budget-friendly! Daily costs: Hostels ₹500-1,500, Food ₹200-800, Transport ₹100-500, Attractions ₹50-500. Total ₹1,500-3,000/day comfortably!",
+            
+            'plan|trip|itinerary': "✈️ I'd love to help plan your trip! Tell me: How many days? What interests you (history, beaches, mountains, culture)? Your budget range? Then I can suggest the perfect itinerary!",
+            
+            'book|booking|reserve': "📅 You can book amazing experiences right here on AtithiVerse! We offer destination tours, hotel bookings, and complete travel packages. What would you like to book?",
+            
+            'best time|when|weather': "🌤️ India's best travel times:\n• Oct-Mar: Pleasant weather, perfect for most places\n• Apr-Jun: Hot, ideal for hill stations\n• Jul-Sep: Monsoon, great for Kerala backwaters\nWhere are you planning to go?"
+        };
+        
+        for (const [keywords, response] of Object.entries(responses)) {
+            const keywordArray = keywords.split('|');
+            if (keywordArray.some(keyword => input.includes(keyword))) {
+                return response;
+            }
+        }
+        
+        const defaultResponses = [
+            "🇮🇳 India offers incredible diversity! From the iconic Taj Mahal to serene Kerala backwaters, vibrant Goa beaches to royal Rajasthan palaces. What type of experience calls to you?",
+            "✨ I'm here to help make your India journey unforgettable! Ask me about destinations, travel tips, budgets, or let me help plan your perfect itinerary. What interests you most?",
+            "🗺️ Incredible India has something for everyone! History buffs love Delhi & Agra, beach lovers choose Goa, nature enthusiasts pick Kerala, adventure seekers head to Himalayas. What's your travel style?"
+        ];
+        
+        return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+    }
+
+    // Event listeners
+    sendButton?.addEventListener('click', sendMessage);
+
+    chatInput?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Enhanced quick actions
+    quickActions.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const message = this.dataset.message;
+            addMessage(message, 'user');
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            showTypingIndicator();
+            callAIService(message);
+        });
+    });
+
+    // Add message with enhanced formatting
+    function addMessage(text, sender) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        // Enhanced text formatting
+        let formattedText = text
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-${sender === 'bot' ? 'robot' : 'user'}"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-text">${formattedText}</div>
+                <span class="message-time">${time}</span>
+            </div>
+        `;
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Smooth animation
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            messageDiv.style.transition = 'all 0.3s ease';
+            messageDiv.style.opacity = '1';
+            messageDiv.style.transform = 'translateY(0)';
+        }, 100);
+    }
+
+    function showTypingIndicator() {
+        const messagesContainer = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        
+        typingDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="typing-animation">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="typing-text">${isConnected ? 'AtithiBot is thinking...' : 'Processing your request...'}</span>
+                </div>
+            </div>
+        `;
+        
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    function updateQuickActions(suggestions) {
+        const quickActionsContainer = document.getElementById('quickActions');
+        if (suggestions && suggestions.length > 0 && quickActionsContainer) {
+            quickActionsContainer.innerHTML = suggestions.slice(0, 4).map(suggestion => `
+                <button class="quick-btn" data-message="${suggestion}">
+                    ${suggestion}
+                </button>
+            `).join('');
+            
+            // Re-attach event listeners
+            quickActionsContainer.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const message = this.dataset.message;
+                    addMessage(message, 'user');
+                    showTypingIndicator();
+                    callAIService(message);
+                });
+            });
+        }
+    }
+}
+
 // ===== UTILITY FUNCTIONS =====
 function showNotification(message, type = 'info') {
-    // Remove existing notifications
     const existingNotifications = document.querySelectorAll('.custom-notification');
     existingNotifications.forEach(notification => notification.remove());
 
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `custom-notification alert alert-${getAlertClass(type)} alert-dismissible fade show`;
     notification.style.cssText = `
@@ -740,7 +1084,6 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentNode) {
             notification.classList.remove('show');
@@ -788,3 +1131,104 @@ window.addEventListener('unhandledrejection', function(event) {
         showNotification('Network error. Please check your connection.', 'error');
     }
 });
+
+// ===== ENHANCED CSS FOR AI FEATURES =====
+const enhancedAIStyles = `
+<style>
+.ai-powered {
+    background: linear-gradient(45deg, #4ade80, #22c55e) !important;
+    padding: 4px 12px !important;
+    border-radius: 15px !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+.offline-mode {
+    background: linear-gradient(45deg, #fbbf24, #f59e0b) !important;
+    padding: 4px 12px !important;
+    border-radius: 15px !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px rgba(74, 222, 128, 0.5); }
+    100% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); }
+}
+
+.typing-animation {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.typing-text {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.message-text strong {
+    font-weight: 600;
+    color: inherit;
+}
+
+.message-text em {
+    font-style: italic;
+    color: inherit;
+}
+
+.message-text code {
+    background: rgba(0,0,0,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.quick-btn {
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    transition: all 0.3s ease !important;
+    border-radius: 20px !important;
+}
+
+.quick-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.typing-indicator .message-content {
+    background: rgba(0,0,0,0.05) !important;
+    border-radius: 20px !important;
+}
+
+.message-time {
+    font-size: 10px;
+    opacity: 0.7;
+    color: inherit;
+}
+</style>
+`;
+
+
+
+// Add enhanced styles to document
+if (!document.getElementById('enhanced-ai-styles')) {
+    const styleElement = document.createElement('div');
+    styleElement.id = 'enhanced-ai-styles';
+    styleElement.innerHTML = enhancedAIStyles;
+    document.head.appendChild(styleElement);
+}
+
+console.log('✅ AtithiVerse JavaScript initialized successfully!');
