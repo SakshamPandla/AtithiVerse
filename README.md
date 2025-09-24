@@ -59,6 +59,4 @@ To stop all services, press `Ctrl+C` in the terminal running the `start_services
 
 Feel free to submit issues and pull requests.
 
-## 📝 License
-
-[Add your license information here]
+## 📝 License: MIT 
